@@ -128,11 +128,11 @@ function success = enjaden(file_in_name, template_name, evaluate, out_dir)
     try
 
         % Load the file all at once.
-        text = fileread(file_in_name);
+        original_text = fileread(file_in_name);
         foid = fopen([out_dir filesep out_file], 'w');
 
         % Normalize line endings for posix.
-        text = [regexprep(text, '\r', '') sprintf('\n%%%%\n')];
+        text = [regexprep(original_text, '\r', '') sprintf('\n%%%%\n')];
 
         % Look for the title.
         title = regexp(text, '^[\n\r]*%%\ *(.*?)[\n\r]', 'tokens');
@@ -276,6 +276,22 @@ function success = enjaden(file_in_name, template_name, evaluate, out_dir)
 
         end
 
+        % Put the actual code into the file too.
+        fprintf(foid, '%s//\n', page_spaces);
+        text = original_text;
+        
+        % This is how 'publish' escapes the quotes, so we'll do the same.
+        text = regexprep(text, '(?<=<!)--', 'REPLACE_WITH_DASH_DASH');
+        text = regexprep(text, '--(?=>)', 'REPLACE_WITH_DASH_DASH');
+        
+        % Surround the original code with big flags.
+        text = sprintf( ...
+             '##### SOURCE BEGIN #####\n%s\n##### SOURCE END #####', text);
+         
+        % Add in the spaces and print it out.
+        text = [block_spaces '| ' regexprep(text, '\n', ['\n' block_spaces '| '])];
+        fprintf(foid, '%s\n', text);
+        
         % Tack on the footer.
         fprintf(foid, '%s', page_footer);
 
