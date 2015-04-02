@@ -1,4 +1,4 @@
-function success = ml2jade(file_in_name, out_dir)
+function success = ml2jade(file_in_name, out_dir, render)
 
 % ml2jade
 %
@@ -43,7 +43,7 @@ function success = ml2jade(file_in_name, out_dir)
     end
     
     % We're pessimists.
-    success = false;
+    success = false; %#ok<NASGU>
 
     % Open the file.
     fiid = fopen(file_in_name);
@@ -85,7 +85,8 @@ function success = ml2jade(file_in_name, out_dir)
     end
     
     % Open the output file.
-    foid = fopen(fullfile(out_dir, [base_name '.jade']), 'w');
+    jade_file_out = fullfile(out_dir, [base_name '.jade']);
+    foid = fopen(jade_file_out, 'w');
 
     % Define a function to snap for us. It will suppress the weird
     % identifier messages in the output but running the snapnow command
@@ -250,8 +251,12 @@ function success = ml2jade(file_in_name, out_dir)
         % Done!
         clean_up();
         
-        % Only now do we relent.
-        success = true;
+        % See if we should go on to HTML.
+        if render
+            success = jade2html(jade_file_out);
+        else
+            success = true;
+        end
 
 	% If something bad happened, close the files and send the error 
     % upstream.

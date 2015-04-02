@@ -12,6 +12,9 @@ html/
 # Ignore the default jade directory that is created for the examples.
 jade/
 
+# Ignore backup files.
+*.asv
+
 #################
 ## Eclipse
 #################

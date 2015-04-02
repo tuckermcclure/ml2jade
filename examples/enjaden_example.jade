@@ -1,0 +1,265 @@
+doctype html
+html
+  head
+
+    //- Bring in the title from the .m file.
+    title Example MATLAB File for <code>enjaden</code>
+
+    //- Create a simple default style sheet that doesn't look terrible.
+    style
+      :stylus
+        h1, h2, h3, h4, h5, h6, body, p, a
+          font-family sans-serif
+        body
+          padding 20px
+        pre
+          background-color #f0f0f0
+          padding 20px
+        //- Unccoment the below to turn on section numbering.
+        //-h1, body
+        //-  counter-reset section
+        //-h2:before
+        //-  counter-increment section
+        //-  content counter(section) ". "
+
+    //- Alternately, don't define a stylesheet here, but link to one:
+    //- link(rel="stylesheet" type="text/css" href="/my_styles.css")
+
+    // Use MathJax for rendering equations.
+    script(type="text/x-mathjax-config").
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "all" } }
+      });
+    script(type='text/javascript', 
+           src='http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML')
+
+  body
+
+    //- Bring in the contents from the .m file.
+    
+    h1 Example MATLAB File for <code>enjaden</code>
+    p.
+      This is an example of a MATLAB file which publishes nicely to Jade via
+      the <code>enjaden</code> tool. It shows what types of paragraph styles and inline
+      markup are possible, like <strong>bold</strong> and <em>italic</em> markup.
+    p.
+      New paragraphs will each get their own &lt;p&gt; tag.
+    p.
+      It shows <a href="https://github.com/tuckermcclure/m2jade">links</a>. Links are only
+      captured when they look like the above. Note that < this > will note show
+      up as a link, and neither will <strong>this</strong>.
+    p.
+      There are numerous paragraph styles, such as code blocks:
+    pre: code.
+      code
+      line 2: code
+      line 3: code
+    p.
+      and preformatted text:
+    pre.
+      PRE
+         TEXT
+    p.
+      There are also the expected ordered and unordered lists. Note that these
+      must be offset with a spacer line so that they can be differentiated from
+      <strong>bold</strong> inline text that happens to start a new line.
+    ul
+      li.
+        This is the first part of the list.
+      li.
+        This is the second part. It's longer than the first. In fact, it's so
+        long that it extends to a new line, without breaking the list.
+      li.
+        This is the third and final thing.
+    p.
+      Numbered lists work the same way:
+    ol
+      li.
+        Thing 1
+      li.
+        Thing 2
+      li.
+        Thing 3
+
+    h2 Some Actual Code
+    p.
+      Here in this section (marked with %%), we'll include some actual code.
+      When <code>enjaden</code> comes across this, it will evaluate it and show the
+      resulting command window output and figures, just below the code.
+    pre.eval: code.
+      % Make a series of random walks.
+      t = 1:1000;
+      y = cumsum(randn(5, length(t)), 2);
+      y(:, end)
+      
+      % Plot some things.
+      figure(1);
+      clf();
+      plot(t, y);
+      xlabel('Time');
+      ylabel('Position');
+      title('Random Walks');
+
+    pre.output: code.
+      ans =
+         -5.1937
+         -6.0350
+         46.7917
+         25.2979
+         39.5703
+    figure: img(src="img/enjaden_example_01.png")
+    h2 Second Section
+    p.
+      In this section, we'll highlight that you don't <strong>always</strong> have to skip a
+      line between the header and paragraph. But we might want to before
+      inserting an image so that it will get its own line and not be part of
+      the paragraph:
+    p.
+      <img src="https://github.com/tuckermcclure/m2jade/blob/master/ml2jade_logo.png">
+
+    // cell 4
+    p.
+      Note that the location of the image can be absolute or relative to the 
+      file.
+
+    h2 Section the Third
+    p.
+      Note that any time you change a figure, it gets included in the output.
+      Let's add some units to the x axis.
+    pre.eval: code.
+      xlabel('Time (s)');
+
+    figure: img(src="img/enjaden_example_02.png")
+    // cell 6
+    p.
+      By the way, we can keep adding paragraphs by making new %% sections and
+      just not giving them headers.
+
+    h2 A Demonstration of Equations
+    p.
+      This part is pretty fun. <em>We're going to show how to use MathJax for 
+      equations</em>! This looks way better than what <code>publish</code> does. (Also, note
+      that the inline markup in this paragraph spans multiple lines; it's still
+      detected correctly.)
+    p.
+      Inline equations use single dollar signs, like \(x\). Let's discuss in more
+      detail in a <em>display equation</em>:
+    p.
+      $$x = f(x)$$
+    p.
+      Looks nice, right? The only downside to using MathJax is that one must be
+      connected to the internet. So if you're publishing a MATLAB file to Jade
+      from a desert island (or, more likely, on some ancient plane that doesn't
+      give you free wifi), you won't be able to see your equations.
+
+    // cell 8
+    p.
+      This concludes the example. See <code>ml2jade_example.jade</code> for an example of
+      a Jade file ready to have its MATLAB sections evaluated and inserted into
+      a new Jade file.
+    //
+      | ##### SOURCE BEGIN #####
+      | %% Example MATLAB File for |enjaden|
+      | % 
+      | % This is an example of a MATLAB file which publishes nicely to Jade via
+      | % the |enjaden| tool. It shows what types of paragraph styles and inline
+      | % markup are possible, like *bold* and _italic_ markup.
+      | %
+      | % New paragraphs will each get their own &lt;p&gt; tag.
+      | %
+      | % It shows <https://github.com/tuckermcclure/m2jade links>. Links are only
+      | % captured when they look like the above. Note that < this > will note show
+      | % up as a link, and neither will <strong>this</strong>.
+      | %
+      | % There are numerous paragraph styles, such as code blocks:
+      | %
+      | %   code
+      | %   line 2: code
+      | %   line 3: code
+      | %
+      | % and preformatted text:
+      | %
+      | %  PRE
+      | %     TEXT
+      | %
+      | % There are also the expected ordered and unordered lists. Note that these
+      | % must be offset with a spacer line so that they can be differentiated from
+      | % *bold* inline text that happens to start a new line.
+      | %
+      | % * This is the first part of the list.
+      | % * This is the second part. It's longer than the first. In fact, it's so
+      | %   long that it extends to a new line, without breaking the list.
+      | % * This is the third and final thing.
+      | %
+      | % Numbered lists work the same way:
+      | %
+      | % # Thing 1
+      | % # Thing 2
+      | % # Thing 3
+      | 
+      | %% Some Actual Code
+      | % 
+      | % Here in this section (marked with %%), we'll include some actual code.
+      | % When |enjaden| comes across this, it will evaluate it and show the
+      | % resulting command window output and figures, just below the code.
+      | 
+      | % Make a series of random walks.
+      | t = 1:1000;
+      | y = cumsum(randn(5, length(t)), 2);
+      | y(:, end)
+      | 
+      | % Plot some things.
+      | figure(1);
+      | clf();
+      | plot(t, y);
+      | xlabel('Time');
+      | ylabel('Position');
+      | title('Random Walks');
+      | 
+      | %% Second Section
+      | % In this section, we'll highlight that you don't *always* have to skip a
+      | % line between the header and paragraph. But we might want to before
+      | % inserting an image so that it will get its own line and not be part of
+      | % the paragraph:
+      | % 
+      | % <<https://github.com/tuckermcclure/m2jade/blob/master/ml2jade_logo.png>>
+      | 
+      | %%
+      | % Note that the location of the image can be absolute or relative to the 
+      | % file.
+      | 
+      | %% Section the Third
+      | %
+      | % Note that any time you change a figure, it gets included in the output.
+      | % Let's add some units to the x axis.
+      | 
+      | xlabel('Time (s)');
+      | 
+      | %%
+      | % By the way, we can keep adding paragraphs by making new %% sections and
+      | % just not giving them headers.
+      | 
+      | %% A Demonstration of Equations
+      | % 
+      | % This part is pretty fun. _We're going to show how to use MathJax for 
+      | % equations_! This looks way better than what |publish| does. (Also, note
+      | % that the inline markup in this paragraph spans multiple lines; it's still
+      | % detected correctly.)
+      | %
+      | % Inline equations use single dollar signs, like $x$. Let's discuss in more
+      | % detail in a _display equation_:
+      | %
+      | % $$x = f(x)$$
+      | %
+      | % Looks nice, right? The only downside to using MathJax is that one must be
+      | % connected to the internet. So if you're publishing a MATLAB file to Jade
+      | % from a desert island (or, more likely, on some ancient plane that doesn't
+      | % give you free wifi), you won't be able to see your equations.
+      | 
+      | %%
+      | % This concludes the example. See |ml2jade_example.jade| for an example of
+      | % a Jade file ready to have its MATLAB sections evaluated and inserted into
+      | % a new Jade file.
+      | 
+      | ##### SOURCE END #####
+

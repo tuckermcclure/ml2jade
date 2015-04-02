@@ -1,4 +1,4 @@
-function success = enjaden(file_in_name, template_name, evaluate, out_dir)
+function success = enjaden(file_in_name, out_dir, template_name, evaluate, render)
 
 % enjaden
 % 
@@ -12,10 +12,6 @@ function success = enjaden(file_in_name, template_name, evaluate, out_dir)
 % ------
 %
 % file_in_name   Name of .m file to convert
-% template_name  Name of template file *or* text to use for the template;
-%                if empty, a default template will be used.
-% evaluate       True to evaluate the MATLAB code sections and include
-%                their results (true by default)
 % out_dir        Output directory for .jade file and images; for my_file.m
 %                with an out_dir of 'here/there/public', the generated
 %                content will be:
@@ -29,6 +25,11 @@ function success = enjaden(file_in_name, template_name, evaluate, out_dir)
 %                images will show up in the .jade as:
 % 
 %                  figure: img(src="img/my_file_01.png")
+% 
+% template_name  Name of template file *or* text to use for the template;
+%                if empty, a default template will be used.
+% evaluate       True to evaluate the MATLAB code sections and include
+%                their results (true by default)
 %
 % Outputs
 % -------
@@ -69,24 +70,29 @@ function success = enjaden(file_in_name, template_name, evaluate, out_dir)
         file_in_name = 'enjaden_example.m';
         out_dir      = 'jade';
     end
-
-    % Set a default template.
-    if nargin < 2 || isempty(template_name)
-        template_name = fileread('_template.jade');
-    end
-    
-    % By default, don't evaluate.
-    if nargin < 3 || isempty(evaluate)
-        evaluate = true;
-    end
     
     % Drop the path from the input file name and the .m.
     [file_in_dir, base_name] = fileparts(which(file_in_name));
     
     % By default (and unless we're just running the example file), use the 
     % input directory as the output directory.
-    if nargin < 4 && nargin >= 1
+    if nargin < 2 && nargin ~= 0
         out_dir = file_in_dir;
+    end
+
+    % Set a default template.
+    if nargin < 3 || isempty(template_name)
+        template_name = fileread('_template.jade');
+    end
+    
+    % By default, evaluate.
+    if nargin < 4 || isempty(evaluate)
+        evaluate = true;
+    end
+    
+    % Be default, don't render.
+    if nargin < 5 || isempty(render)
+        render = false;
     end
     
     % If the template_name looks like a file name, load the file.
@@ -305,6 +311,11 @@ function success = enjaden(file_in_name, template_name, evaluate, out_dir)
             success = ml2jade(out_file, jade_out_dir);
             pause(0.01);
             delete(out_file);
+        end
+        
+        % If we should go yet one step further to HTML, do so now.
+        if render
+            success = jade2html([fullfile(jade_out_dir, base_name) '.jade']);
         end
         
     % If there was an error...

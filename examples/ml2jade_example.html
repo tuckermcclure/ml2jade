@@ -1,0 +1,62 @@
+<!DOCTYPE html><html><head><title>Example Jade file for ml2jade</title><style>h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+body,
+p,
+a {
+  font-family: sans-serif;
+}
+body {
+  padding: 20px;
+}
+pre {
+  background-color: #f0f0f0;
+  padding: 20px;
+}
+</style></head><body><h1>Example Jade file for <code>ml2jade</code></h1><p>This file is an example Jade file with some MATLAB code written 
+somewhere inside of it. We can pass it to ml2jade to have these code
+blocks executed, and the results will be inserted below the code  
+blocks, just like for enjaden. The result will be written to a new
+file(so we don't overwrite this one).
+</p><h2>Section 1: Including Some Code</h2><p>We include code in <code>pre.eval: code.</code> blocks, such as this 
+one. <code>ml2jade</code> will look for these blocks, evaluate them
+in the base workspace, and add in the results.</p><pre class="eval"><code>% Make a series of random walks.
+t = 1:1000;
+y = cumsum(randn(5, length(t)), 2);
+y(:, end)
+
+% Plot some things.
+figure(1);
+clf();
+plot(t, y);
+xlabel('Time');
+ylabel('Position');
+title('Random Walks');
+</code></pre><pre class="output"><code>ans =
+  -37.2841
+   10.0870
+   -0.6256
+   22.7401
+   18.8099</code></pre><figure><img src="img/ml2jade_example_01.png"></figure><h2>Section 2: Running <code>ml2jade</code></h2><p>We can include code that we <strong>don't</strong> want to execute as 
+normal. For instance, here's how to call <code>ml2jade</code> with
+this file name and put the output in the <code>jade</code> directory.</p><pre><code>ml2jade('ml2jade_example.jade', 'jade');</code></pre><p>We don't want to evaluate the line above when publishing because 
+that would make an endless loop. We use a <code>pre: code.</code>
+block here. Note that, because it doesn't have <code>eval</code> in
+there, <code>ml2jade</code> will happily pass it over.
+</p><h2>Section 3: Output Files</h2><p>The output file will be in the specified outut directory (the second
+argument, above) with the same name as the input file. Therefore, the
+output directory must be different from the input directory (unless
+the input file name starts with an underscore as below).</p><p>As a matter of convenience, sometimes one might want to keep a 
+<em>source</em>Jade file in the same directory as the <em>final</em>
+Jade file (the one that has the MATLAB outputs in it). For this
+reason, one can start the file name with an underscore, like 
+<code>_my_file.jade</code>. When calling <code>ml2jade</code> with 
+this convention, it will drop the underscore for the output file 
+name, e.g., <code>my_file.jade</code>. This convention aligns with 
+Jade servers ignoring files that begin with underscores when serving
+content.
+</p><h2>Section 4: Everything Else</h2><p>Otherwise, this is just a normal Jade file where we can do normal 
+Jade things.</p></body></html>

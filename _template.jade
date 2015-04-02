@@ -6,20 +6,21 @@ html
     title <ml2jade=page_title>
 
     //- Create a simple default style sheet that doesn't look terrible.
-    :stylus
-      h1, h2, h3, h4, h5, h6, body, p, a
-        font-family sans-serif
-      body
-        padding 20px
-      pre
-        background-color #f0f0f0
-        padding 20px
-      //- Unccoment the below to turn on section numbering.
-      //-h1, body
-      //-  counter-reset section
-      //-h2:before
-      //-  counter-increment section
-      //-  content counter(section) ". "
+    style
+      :stylus
+        h1, h2, h3, h4, h5, h6, body, p, a
+          font-family sans-serif
+        body
+          padding 20px
+        pre
+          background-color #f0f0f0
+          padding 20px
+        //- Unccoment the below to turn on section numbering.
+        //-h1, body
+        //-  counter-reset section
+        //-h2:before
+        //-  counter-increment section
+        //-  content counter(section) ". "
 
     //- Alternately, don't define a stylesheet here, but link to one:
     //- link(rel="stylesheet" type="text/css" href="/my_styles.css")
