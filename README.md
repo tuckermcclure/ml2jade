@@ -57,7 +57,7 @@ For an example of using <code>ml2jade</code> with your new Jade + Stylus install
 1. Open MATLAB, navigate to wherever you put <code>ml2jade</code> and run <code>enjaden('enjaden_example.m', 'jade')</code> to publish <code>enjaden_example.m</code> to <code>jade/enjaden_example.jade</code>. This will publish the MATLAB script to a Jade file in <code>ml2jade/jade/enjaden_example.jade</code>.
 2. To convert the Jade all the way to HTML, run <code>enjaden('enjaden_example.m', 'jade', [], [], true)</code> (that's file name, output directory, template [default], evaluate [default], and _render_). This will create <code>ml2jade/jade/enjaden_example.html</code>.
 
-Using a server is a great choice too, and [Harp](http://www.harpjs.com) is particularly easy. It also runs on [Node.js](http://www.nodejs.org) and is light and easy to use. Here's how to get set up with using Harp for the first time:
+Using a server is a great choice too, and [Harp](http://harpjs.com) is particularly easy. It also runs on [Node.js](http://www.nodejs.org) and is light and easy to use. Here's how to get set up with using Harp for the first time:
 
 1. Head on over to [Node.js](http://www.nodejs.org) and download the appropriate installer for your system. Run the installer.
 2. If that worked, open a terminal window (command line) and run <code>npm install harp -g</code> (or <code>sudo npm install harp -g</code> if you get a message about permissions on OS X or Linux).
