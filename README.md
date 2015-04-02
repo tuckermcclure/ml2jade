@@ -46,7 +46,7 @@ If you already have a way to work with Jade files, there's nothing new you'll ne
 
 Let's look at rendering to static HTML first. <code>ml2jade</code> can do this for you; it's the final argument to <code>ml2jade</code> and <code>enjaden</code>. You'll just need to have Node, Jade, and Stylus installed.
 
-1. Head on over to [Node.js](www.nodejs.org) and download the appropriate installer for your system. Run the installer.
+1. Head on over to [Node.js](http://www.nodejs.org) and download the appropriate installer for your system. Run the installer.
 2. If that worked, open a terminal window (command line) and run <code>npm install jade -g</code> (or <code>sudo npm install jade -g</code> if you get a message about permissions on OS X or Linux).
 3. Now install Stylus the same way: <code>npm install stylus -g</code> (or <code>sudo npm install stylus -g</code>).
 
@@ -57,9 +57,9 @@ For an example of using <code>ml2jade</code> with your new Jade + Stylus install
 1. Open MATLAB, navigate to wherever you put <code>ml2jade</code> and run <code>enjaden('enjaden_example.m', 'jade')</code> to publish <code>enjaden_example.m</code> to <code>jade/enjaden_example.jade</code>. This will publish the MATLAB script to a Jade file in <code>ml2jade/jade/enjaden_example.jade</code>.
 2. To convert the Jade all the way to HTML, run <code>enjaden('enjaden_example.m', 'jade', [], [], true)</code> (that's file name, output directory, template [default], evaluate [default], and _render_). This will create <code>ml2jade/jade/enjaden_example.html</code>.
 
-Using a server is a great choice too, and [Harp](www.harpjs.com) is particularly easy. It also runs on [Node.js](www.nodejs.org) and is light and easy to use. Here's how to get set up with using Harp for the first time:
+Using a server is a great choice too, and [Harp](http://www.harpjs.com) is particularly easy. It also runs on [Node.js](http://www.nodejs.org) and is light and easy to use. Here's how to get set up with using Harp for the first time:
 
-1. Head on over to [Node.js](www.nodejs.org) and download the appropriate installer for your system. Run the installer.
+1. Head on over to [Node.js](http://www.nodejs.org) and download the appropriate installer for your system. Run the installer.
 2. If that worked, open a terminal window (command line) and run <code>npm install harp -g</code> (or <code>sudo npm install harp -g</code> if you get a message about permissions on OS X or Linux).
 
 That's it for installation! You can now navigate to any directory with Jade files and run <code>harp server</code>.
