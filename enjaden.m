@@ -157,7 +157,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 
         % Get the nominal spacing.
         page_spaces  = regexp(template, ...
-                            '(\ *)<ml2jade=page_content>[\n|$]', 'tokens');
+                            '(\ *)<ml2jade=page_content>[\n\r$]', 'tokens');
         page_spaces  = page_spaces{1}{1};
         block_spaces = [page_spaces, '  '];
 
