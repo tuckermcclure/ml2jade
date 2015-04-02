@@ -308,14 +308,9 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         % If we actually need to evaluate the code, do so now. Remove the
         % temporary jade file.
         if evaluate
-            success = ml2jade(out_file, jade_out_dir);
+            success = ml2jade(out_file, jade_out_dir, render);
             pause(0.01);
             delete(out_file);
-        end
-        
-        % If we should go yet one step further to HTML, do so now.
-        if render
-            success = jade2html([fullfile(jade_out_dir, base_name) '.jade']);
         end
         
     % If there was an error...
@@ -324,7 +319,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         rethrow(err);
     end
 
-end
+end % enjaden
 
 % Replace inline expressions.
 function paragraph = replace_inline(paragraph, type)
@@ -364,8 +359,7 @@ function paragraph = replace_inline(paragraph, type)
     % Image.
     paragraph = regexprep(paragraph, '<<(.*?)>>', '<img src="$1">');
 
-end
-
+end % replace_inline
 
 % Add spacing and stuff like 'ul  '.
 function paragraph = add_prefix(type, paragraph, block_spaces)
@@ -400,4 +394,4 @@ function paragraph = add_prefix(type, paragraph, block_spaces)
     paragraph = [block_spaces ...
                  regexprep(paragraph, '\n', ['\n' block_spaces])];
                     
-end
+end % add_prefix

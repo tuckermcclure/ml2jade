@@ -61,7 +61,7 @@ title('Random Walks');
 % inserting an image so that it will get its own line and not be part of
 % the paragraph:
 % 
-% <<https://github.com/tuckermcclure/m2jade/blob/master/ml2jade_logo.png>>
+% <<https://github.com/tuckermcclure/m2jade/blob/master/ml2jade-logo.png>>
 
 %%
 % Note that the location of the image can be absolute or relative to the 

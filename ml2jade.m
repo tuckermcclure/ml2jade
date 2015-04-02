@@ -7,7 +7,13 @@ function success = ml2jade(file_in_name, out_dir, render)
 % images of the figures. Anything in a "pre.eval: code." block is treated 
 % as MATLAB code.
 %
-% Example for _input.jade file:
+%   ml2jade()                               % Run an example.
+%   ml2jade(file_in_name)                   % Given file name to convert.
+%   ml2jade(file_in_name, out_dir)          % Specify output directory.
+%   ml2jade(file_in_name, out_dir, render)  % Render Jade to HTML.
+%   success = ml2jade(...)                  % Report success of operation.
+%
+% Example for _my_file.jade file:
 %
 % html
 %   body
@@ -17,7 +23,7 @@ function success = ml2jade(file_in_name, out_dir, render)
 %       x = 1
 %       plot(randn(10), '.');
 %
-% The output will be <out_dir>/input.jade:
+% The output will be <out_dir>/my_file.jade: (Note the lack of underscore.)
 %
 % html
 %   body
@@ -42,6 +48,16 @@ function success = ml2jade(file_in_name, out_dir, render)
         out_dir      = fullfile(this_dir, 'jade');
     end
     
+    % By default, use the working directory as output.
+    if nargin < 2 && nargin ~= 0
+        out_dir = [pwd filesep];
+    end
+    
+    % By default, don't render to HTML.
+    if nargin < 3
+        render = false;
+    end
+    
     % We're pessimists.
     success = false; %#ok<NASGU>
 
@@ -57,7 +73,7 @@ function success = ml2jade(file_in_name, out_dir, render)
     end
     
     if ismac() && out_dir(1) ~= filesep
-        out_dir = [filesep pwd filesep out_dir];
+        out_dir = [pwd filesep out_dir];
     end
     
     % Drop the '_'. This allows us to keep, e.g., _index.jade in the same
@@ -120,7 +136,10 @@ function success = ml2jade(file_in_name, out_dir, render)
         data.options.maxWidth         = [];
         data.marker                   = 'ml2jade';
         data.baseImageName            = fullfile(img_dir, base_name);
-        if ispc
+        if ismac
+            % snapnow sometimes removes the first character of the path??
+            %  data.baseImageName = [filesep data.baseImageName];
+        elseif ispc
             % For Jade, we *always* use / for a filesep.
             data.baseImageName = regexprep(data.baseImageName, '\\', '/');
         end
