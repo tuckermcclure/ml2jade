@@ -138,7 +138,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         foid = fopen([out_dir filesep out_file], 'w');
 
         % Normalize line endings for posix.
-        text = [regexprep(original_text, '\r', '') sprintf('\n%%%%\n')];
+        text = [regexprep(original_text, '\r', '') sprintf('\n\n%%%%\n')];
 
         % Look for the title.
         title = regexp(text, '^[\n\r]*%%\ *(.*?)[\n\r]', 'tokens');
@@ -188,12 +188,13 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
             section = text(stops(k)+1:starts(k+1)-1);
 
             % Look for a blurb and bit of code.
-            results = regexp(section, '^(%.*?)\n([^%].*)', 'tokens');
-            if ~isempty(results)
+            % results = regexp(section, '^(%.*?)\n([^%].*)', 'tokens');
+            blurb = regexp(section, '^(%.*?)(\n[^%]|$)', 'tokens');
+            code  = regexp(section, '(^|\n)([^%].*)', 'tokens');
+            if ~isempty(blurb)
 
                 % Extract the parts.
-                blurb = results{1}{1};
-                code = results{1}{2};
+                blurb = blurb{1}{1};
 
                 % Drop the '% 's.
                 blurb = regexprep(blurb, '(?<=(\n|^))%\ ?', '');
@@ -266,13 +267,11 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 
                 end
 
-            % Otherwise, the code is the whole section.
-            else
-                code = section;
             end
-
+            
             % See if there's code.
-            if ~isempty(code) && any(regexp(code, '\S'))
+            if ~isempty(code) && any(regexp(code{1}{2}, '\S'))
+                code = code{1}{2};
                 code = strtrim(code);
                 code = [block_spaces regexprep(code, ...
                                                '\n', ['\n' block_spaces])];

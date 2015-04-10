@@ -31,11 +31,10 @@ function success = jade2html(file)
     success = false;
     
     % Look for Jade on the path.
-    found_jade = false;
-    if exist('jade', 'file')
-        
-        [status, ~] = system('jade --version');
-        found_jade = ~status;
+    [status, ~] = system('jade --version');
+    found_jade = ~status;
+    
+    if found_jade
         
     % Look for Jade where it typically gets installed.
     elseif ~ispc && exist('/usr/local/bin/jade', 'file')
