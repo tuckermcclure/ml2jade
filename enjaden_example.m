@@ -7,7 +7,7 @@
 % New paragraphs will each get their own &lt;p&gt; tag.
 %
 % It shows <https://github.com/tuckermcclure/m2jade links>. Links are only
-% captured when they look like the above. Note that < this > will note show
+% captured when they look like the above. Note that < this > will not show
 % up as a link, and neither will <strong>this</strong>.
 %
 % There are numerous paragraph styles, such as code blocks:

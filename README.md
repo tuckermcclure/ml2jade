@@ -7,7 +7,7 @@ This tool does three things:
 
 It works like MATLAB's built-in <code>publish</code> function, but produces very clean Jade syntax, which can be easily combined with templates or stylesheets.
 
-Jade files aren't meant to be viewed themselves; a tool renders them to HTML (either statically or as part of a webserver). <code>ml2jade</code> is useful, for instance, if you maintain a series of MATLAB examples for a website. You can write MATLAB scripts and publish them directly to Jade using your custom template, or you can write your .jade files yourself, automatically evaluate the code blocks inside of it, and put the output on the web server.
+Jade files aren't meant to be viewed themselves; a tool renders them to HTML (either statically or as part of a webserver). <code>ml2jade</code> is useful, for instance, if you maintain a series of MATLAB examples for a website. You can write MATLAB scripts and publish them directly to Jade using your custom template, or you can write your .jade files yourself, automatically evaluate the code blocks inside of them and include the results directly in the .jade file, and then put the final files on the web server.
 
 # Examples
 
@@ -15,6 +15,8 @@ To publish a MATLAB script to Jade, call <code>enjaden</code> from within MATLAB
 ```
 enjaden('my_script.m');
 ```
+This will create <code>my_script.jade</code> with all of the command line and figure outputs included under each section of code.
+
 By default, the output directory will be the same directory the file is in. To specify the output directory:
 ```
 enjaden('my_script.m', 'path/to/outputs');

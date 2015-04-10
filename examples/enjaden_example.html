@@ -21,7 +21,7 @@ pre {
 });</script><script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script></head><body><h1>Example MATLAB File for <code>enjaden</code></h1><p>This is an example of a MATLAB file which publishes nicely to Jade via
 the <code>enjaden</code> tool. It shows what types of paragraph styles and inline
 markup are possible, like <strong>bold</strong> and <em>italic</em> markup.</p><p>New paragraphs will each get their own &lt;p&gt; tag.</p><p>It shows <a href="https://github.com/tuckermcclure/m2jade">links</a>. Links are only
-captured when they look like the above. Note that < this > will note show
+captured when they look like the above. Note that < this > will not show
 up as a link, and neither will <strong>this</strong>.</p><p>There are numerous paragraph styles, such as code blocks:</p><pre><code>code
 line 2: code
 line 3: code</code></pre><p>and preformatted text:</p><pre>PRE
@@ -44,11 +44,11 @@ xlabel('Time');
 ylabel('Position');
 title('Random Walks');
 </code></pre><pre class="output"><code>ans =
-    2.8769
--64.2437
-   20.1303
--11.3588
-  -31.2417</code></pre><figure><img src="img/enjaden_example_01.png"></figure><h2>Second Section</h2><p>In this section, we'll highlight that you don't <strong>always</strong> have to skip a
+   -5.1937
+   -6.0350
+   46.7917
+   25.2979
+   39.5703</code></pre><figure><img src="img/enjaden_example_01.png"></figure><h2>Second Section</h2><p>In this section, we'll highlight that you don't <strong>always</strong> have to skip a
 line between the header and paragraph. But we might want to before
 inserting an image so that it will get its own line and not be part of
 the paragraph:</p><p><img src="../ml2jade-logo.png">
@@ -78,7 +78,7 @@ a new Jade file.</p><!--| ##### SOURCE BEGIN #####
 | % New paragraphs will each get their own &lt;p&gt; tag.
 | %
 | % It shows <https://github.com/tuckermcclure/m2jade links>. Links are only
-| % captured when they look like the above. Note that < this > will note show
+| % captured when they look like the above. Note that < this > will not show
 | % up as a link, and neither will <strong>this</strong>.
 | %
 | % There are numerous paragraph styles, such as code blocks:
