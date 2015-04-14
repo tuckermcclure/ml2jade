@@ -12,9 +12,13 @@ html
           font-family sans-serif
         body
           padding 20px
+        .container
+          max-width 720px
         pre
           background-color #f0f0f0
           padding 20px
+        figure img
+          max-width 640px
         //- Unccoment the below to turn on section numbering.
         //-h1, body
         //-  counter-reset section
@@ -35,5 +39,7 @@ html
 
   body
 
-    //- Bring in the contents from the .m file.
-    <ml2jade=page_content>
+    .container
+
+      //- Bring in the contents from the .m file.
+      <ml2jade=page_content>

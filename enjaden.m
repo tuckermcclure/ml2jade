@@ -229,6 +229,12 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
                         do_replacements = false;
                         type = 'pre';
                         
+                    % Block equations
+                    elseif    length(paragraph) > 2 ...
+                           && all(paragraph(1:2) == '$$')
+                        
+                        do_replacements = false;
+                        
                     % Bullets
                     elseif length(paragraph) > 1 && paragraph(1) == '*'
                         
@@ -343,14 +349,14 @@ function paragraph = replace_inline(paragraph, type)
     % Embolden.
     if strcmp(type, 'ul');
         paragraph = regexprep(paragraph, ...
-                                '[^\n]\*(.+?)\*', '<strong>$1</strong>');
+                      '([^\n])\*(.+?)\*(\W|$)', '$1<strong>$2</strong>$3');
     else
         paragraph = regexprep(paragraph, ...
-                                     '\*(.+?)\*', '<strong>$1</strong>');
+                           '\*([^\*]+?)\*(\W|$)', '<strong>$1</strong>$2');
     end
 
     % Italic.
-    paragraph = regexprep(paragraph, '_(.+?)_', '<em>$1</em>');
+    paragraph = regexprep(paragraph, '_(\w.+?)_(\W|$)', '<em>$1</em>$2');
 
     % Code.
     paragraph = regexprep(paragraph, '\|(.+?)\|', '<code>$1</code>');
