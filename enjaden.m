@@ -55,6 +55,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 %    head
 %      title <ml2jade=page_title>
 %    body
+%      h1 <ml2jade=page_title>
 %      <ml2jade=page_content>
 %
 % Any inline or display equations ($x$ or $$x = f(x)$$) will use MathJax
@@ -128,7 +129,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         if ~isempty(foid), fclose(foid); foid = []; end
     end
     
-    % Try everythinig so we can catch and clean up before the error is
+    % Try everything so we can catch and clean up before the error is
     % rethrown.
     success = false;
     try
@@ -176,7 +177,8 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
             header = replace_inline(cells{k}{1});
             if ~isempty(header)
                 if k == 1
-                    fprintf(foid, '%sh1 %s\n', page_spaces, header);
+                    % Let the template handle the title.
+                    %fprintf(foid, '%sh1 %s\n', page_spaces, header);
                 else
                     fprintf(foid, '%sh2 %s\n', page_spaces, header);
                 end
@@ -314,8 +316,13 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         % temporary jade file.
         if evaluate
             success = ml2jade(out_file, jade_out_dir, render);
-            pause(0.01);
-            delete(out_file);
+            for tries = 1:50
+                if exist(out_file, 'file')
+                    delete(out_file);
+                    break;
+                end
+                pause(0.01);
+            end
         end
         
     % If there was an error...

@@ -72,6 +72,11 @@ function success = ml2jade(file_in_name, out_dir, render)
         out_dir = file_in_dir;
     end
     
+    % Make sure it ends in / (or \).
+    if out_dir(end) ~= filesep
+        out_dir = [out_dir filesep];
+    end
+    
     if ismac() && out_dir(1) ~= filesep
         out_dir = [pwd filesep out_dir];
     end
@@ -238,9 +243,9 @@ function success = ml2jade(file_in_name, out_dir, render)
                             % For each image, output a 'figure' for it.
                             for k = img_indices(:).'
 
-                                % On Mac, remove the 'out' directory'.
+                                % Make the path relative.
                                 img = data.pictureList{k};
-                                img = img(length(out_dir)+2:end);
+                                img = img(length(out_dir)+1:end);
                                 fprintf(foid, '%sfigure: img(src="%s")\n', ...
                                         spaces_top, img);
 
