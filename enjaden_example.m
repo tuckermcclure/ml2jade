@@ -35,6 +35,15 @@
 % # Thing 1
 % # Thing 2
 % # Thing 3
+%
+% Finally, we can ignore an entire section by using:
+%
+%   %% %#enjaden:hide
+%   set(h_figure, 'Name', 'foobar');
+%
+% If the above section were in a file being evaluated, the figure name
+% would be changed, but the figure wouldn't show up in the Jade file, and
+% neither would the text itself (except as a comment).
 
 %% Some Actual Code
 % 
@@ -73,6 +82,14 @@ title('Random Walks');
 % Let's add some units to the x axis.
 
 xlabel('Time (s)');
+
+%% %#enjaden:hide
+% Unless you want to hide a whole section with '%#enjaden:hide'. The
+% paragraph text will still show up, and the code will be evaluated, but
+% the results won't be included in the output. This is useful, e.g., for
+% doing something programmatically that is supposed to be done by hand.
+disp('I''ll get evaluated, but I''ll merely be a comment in the Jade.');
+set(1, 'Name', 'Glorious Figure');
 
 %%
 % By the way, we can keep adding paragraphs by making new %% sections and

@@ -5,9 +5,6 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 % Publishes a MATLAB script to Jade, similar to MATLAB's built-in 'publish'
 % function.
 %
-% This tool will use MathJax to format the equations, and the default
-% template 
-%
 % Inputs
 % ------
 %
@@ -65,6 +62,18 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 %
 % Either the raw text for this can be passed in, or this can be saved in a
 % file (e.g., _my_template.jade), and the file name can be passed in.
+%
+% Other
+% -----
+% 
+% To evaluate code without including the code or results in the generated
+% Jade file, use a section whose header is #%enjaden:hide, such as:
+%
+%   %% %#enjaden:hide
+%   set(h, 'Color', 'w'); % Make figure background white, but don't show it
+%
+% This will appear in the generated Jade as a comment, but the comment
+% *will* be evaluated when "evaluating" the jade with ml2jade.
 
     % Set a default file, just as an example.
     if nargin < 1
@@ -138,8 +147,10 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         original_text = fileread(file_in_name);
         foid = fopen([out_dir filesep out_file], 'w');
 
-        % Normalize line endings for posix.
-        text = [regexprep(original_text, '\r', '') sprintf('\n\n%%%%\n')];
+        % Normalize line endings for posix and tack on %% at the end (which
+        % we'll ignore).
+        text = [regexprep(original_text, '\r', '') ...
+                sprintf('\n\n%%%%\n')];
 
         % Look for the title.
         title = regexp(text, '^[\n\r]*%%\ *(.*?)[\n\r]', 'tokens');
@@ -158,7 +169,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 
         % Get the nominal spacing.
         page_spaces  = regexp(template, ...
-                            '(\ *)<ml2jade=page_content>[\n\r$]', 'tokens');
+                           '(\ *)<ml2jade=page_content>[\n\r$]', 'tokens');
         page_spaces  = page_spaces{1}{1};
         block_spaces = [page_spaces, '  '];
 
@@ -175,12 +186,18 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 
             % Pull the header and make it an h2.
             header = replace_inline(cells{k}{1});
+            cell_is_hidden = false;
             if ~isempty(header)
                 if k == 1
                     % Let the template handle the title.
                     %fprintf(foid, '%sh1 %s\n', page_spaces, header);
                 else
-                    fprintf(foid, '%sh2 %s\n', page_spaces, header);
+                    if strcmp(header, '%#enjaden:hide')
+                        fprintf(foid, '%s//- %%#enjaden:hide\n', page_spaces);
+                        cell_is_hidden = true;
+                    else
+                        fprintf(foid, '%sh2 %s\n', page_spaces, header);
+                    end
                 end
             else
                 fprintf(foid, '%s// cell %d\n', page_spaces, k);
@@ -282,8 +299,12 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
                 code = code{1}{2};
                 code = strtrim(code);
                 code = [block_spaces regexprep(code, ...
-                                               '\n', ['\n' block_spaces])];
-                fprintf(foid, '%spre.eval: code.\n', page_spaces);
+                                           '\n', ['\n' block_spaces])];
+                if ~cell_is_hidden
+                    fprintf(foid, '%spre.eval: code.\n', page_spaces);
+                else
+                    fprintf(foid, '%s//-\n', page_spaces);
+                end
                 fprintf(foid, '%s\n', code);
             end
 

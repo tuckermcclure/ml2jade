@@ -8,7 +8,7 @@ function success = ml2jade(file_in_name, out_dir, render)
 % as MATLAB code.
 %
 %   ml2jade()                               % Run an example.
-%   ml2jade(file_in_name)                   % Given file name to convert.
+%   ml2jade(file_in_name)                   % Give file name to convert.
 %   ml2jade(file_in_name, out_dir)          % Specify output directory.
 %   ml2jade(file_in_name, out_dir, render)  % Render Jade to HTML.
 %   success = ml2jade(...)                  % Report success of operation.
@@ -73,7 +73,7 @@ function success = ml2jade(file_in_name, out_dir, render)
     end
     
     % Make sure it ends in / (or \).
-    if out_dir(end) ~= filesep
+    if isempty(out_dir) || out_dir(end) ~= filesep
         out_dir = [out_dir filesep];
     end
     
@@ -110,7 +110,7 @@ function success = ml2jade(file_in_name, out_dir, render)
     foid = fopen(jade_file_out, 'w');
 
     % Define a function to snap for us. It will suppress the weird
-    % identifier messages in the output but running the snapnow command
+    % identifier messages in the output but runs the snapnow command
     % entirely within an evalc. A bit odd. Works fine.
     cell_count = 0;
     function hidden_snap(cmd)
@@ -151,6 +151,7 @@ function success = ml2jade(file_in_name, out_dir, render)
         snapnow('set', data);
 
         % Loop over the lines of the file.
+        hide_code = false;
         while true
 
             % Read in the line and bail if done.
@@ -165,8 +166,20 @@ function success = ml2jade(file_in_name, out_dir, render)
 
                 % If code was found...
                 if ~isempty(n_spaces_top)
+                    
                     in_code = true;
                     first_line = true;
+                    hide_code = false;
+                    
+                elseif hide_code
+                    
+                    % Look for the other line that signals incoming code.
+                    n_spaces_top = regexp(line, '^\s*(?=//-)', 'end');
+                    if ~isempty(n_spaces_top)
+                        in_code = true;
+                        first_line = true;
+                    end
+                    
                 end
 
             % Otherwise, we're in a code segment.
@@ -185,6 +198,7 @@ function success = ml2jade(file_in_name, out_dir, render)
 
                     % See if this line is still part of the code segment.
                     if isempty(line)
+                        
                     elseif    length(line) >= n_spaces ...
                            && all(line(1:n_spaces) == ' ')
 
@@ -197,7 +211,9 @@ function success = ml2jade(file_in_name, out_dir, render)
 
                         % Begin a new cell.
                         cell_count = cell_count + 1;
-                        hidden_snap('beginCell');
+                        if ~hide_code
+                            hidden_snap('beginCell');
+                        end
                         
                         % Evaluate this whole block of code. We use the
                         % storage to hold on to the lines as they come in
@@ -209,46 +225,50 @@ function success = ml2jade(file_in_name, out_dir, render)
                             output = evalin('base', 'evalc(ml2jade_storage());');
 
                             % End the cell.
-                            hidden_snap('endCell');
+                            if ~hide_code
+                                
+                                hidden_snap('endCell');
 
-                            % Set the indentation for the output pre:.
-                            spaces_top = repmat(' ', 1, n_spaces_top);
+                                % Set the indentation for the output pre:.
+                                spaces_top = repmat(' ', 1, n_spaces_top);
 
-                            % Use only the non-empty outputs.
-                            if ~isempty(output)
+                                % Use only the non-empty outputs.
+                                if ~isempty(output)
 
-                                % We'll use this to indent properly for Jade.
-                                spaces = repmat(' ', 1, n_spaces);
+                                    % We'll use this to indent properly for Jade.
+                                    spaces = repmat(' ', 1, n_spaces);
 
-                                % Print this as an "output" pre.
-                                fprintf(foid, '%spre.output: code.\n', ...
-                                        spaces_top);
+                                    % Print this as an "output" pre.
+                                    fprintf(foid, '%spre.output: code.\n', ...
+                                            spaces_top);
 
-                                % Replace all \n (except for the last) with \n
-                                % followed by the appropriate number of spaces.
-                                out_lines = regexprep(output, '\n(?!$)', ...
-                                                      ['\n' spaces]);
-                                fprintf(foid, '%s%s', spaces, out_lines);
+                                    % Replace all \n (except for the last) with \n
+                                    % followed by the appropriate number of spaces.
+                                    out_lines = regexprep(output, '\n(?!$)', ...
+                                                          ['\n' spaces]);
+                                    fprintf(foid, '%s%s', spaces, out_lines);
 
-                            end
+                                end
 
-                            % Get the snapnow results.
-                            data = snapnow('get');
+                                % Get the snapnow results.
+                                data = snapnow('get');
 
-                            % See which images belong in the current cell (it
-                            % will be the ones at the end).
-                            img_cells   = data.placeList(1:2:end);
-                            img_indices = find(img_cells == cell_count);
+                                % See which images belong in the current cell (it
+                                % will be the ones at the end).
+                                img_cells   = data.placeList(1:2:end);
+                                img_indices = find(img_cells == cell_count);
 
-                            % For each image, output a 'figure' for it.
-                            for k = img_indices(:).'
+                                % For each image, output a 'figure' for it.
+                                for k = img_indices(:).'
 
-                                % Make the path relative.
-                                img = data.pictureList{k};
-                                img = img(length(out_dir)+1:end);
-                                fprintf(foid, '%sfigure: img(src="%s")\n', ...
-                                        spaces_top, img);
+                                    % Make the path relative.
+                                    img = data.pictureList{k};
+                                    img = img(length(out_dir)+1:end);
+                                    fprintf(foid, '%sfigure: img(src="%s")\n', ...
+                                            spaces_top, img);
 
+                                end
+                                
                             end
 
                         catch err %#ok<NASGU>
@@ -260,6 +280,7 @@ function success = ml2jade(file_in_name, out_dir, render)
                         ml2jade_storage('reset');
                         in_code    = false;
                         first_line = false;
+                        hide_code  = false;
 
                     end
 
@@ -268,8 +289,14 @@ function success = ml2jade(file_in_name, out_dir, render)
             end % in/out of code
 
             % Add the line no matter what. We never *remove* from the jade.
+            % Well, unless it specifically tells us to.
             fprintf(foid, '%s\n', line);
 
+            % See if we need to hide the upcoming block.
+            if ~isempty(regexp(line, '//- %#enjaden:hide', 'once'))
+                hide_code = true;
+            end
+            
         end % for each line
 
         % Done!
