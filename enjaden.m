@@ -72,8 +72,17 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 %   %% %#enjaden:hide
 %   set(h, 'Color', 'w'); % Make figure background white, but don't show it
 %
-% This will appear in the generated Jade as a comment, but the comment
+% To evaluate code without including the code, but including figure output;
+%
+%   %% %#enjaden:capture
+%   set(h, 'Color', [[1 0.5 0.5]); % Make background pink and show it.
+% 
+% These will appear in the generated Jade as a comment, but the comment
 % *will* be evaluated when "evaluating" the jade with ml2jade.
+%
+% To tell jade to evaluate something is actually a comment in the code:
+% 
+%   %#enjaden:disp('You''ll only see this when rendering!');
 
     % Set a default file, just as an example.
     if nargin < 1
@@ -192,8 +201,9 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
                     % Let the template handle the title.
                     %fprintf(foid, '%sh1 %s\n', page_spaces, header);
                 else
-                    if strcmp(header, '%#enjaden:hide')
-                        fprintf(foid, '%s//- %%#enjaden:hide\n', page_spaces);
+                    if    length(header) > 10 ...
+                       && strcmp(header(1:10), '%#enjaden:')
+                        fprintf(foid, '%s//- %s\n', page_spaces, header);
                         cell_is_hidden = true;
                     else
                         fprintf(foid, '%sh2 %s\n', page_spaces, header);

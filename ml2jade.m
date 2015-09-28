@@ -152,6 +152,7 @@ function success = ml2jade(file_in_name, out_dir, render)
 
         % Loop over the lines of the file.
         hide_code = false;
+        capture   = true;
         while true
 
             % Read in the line and bail if done.
@@ -202,8 +203,13 @@ function success = ml2jade(file_in_name, out_dir, render)
                     elseif    length(line) >= n_spaces ...
                            && all(line(1:n_spaces) == ' ')
 
-                        % Evaluate it.
-                        ml2jade_storage('add', line);
+                        % Add it to the queue to evaluate later.
+                        if ~isempty(regexp(line, '\s*%#enjaden:', 'once'))
+                            ml2jade_storage('add', ...
+                                regexprep(line, '\s*%#enjaden:', ''));
+                        else
+                            ml2jade_storage('add', line);
+                        end
 
                     % Otherwise, we are done with the code block. Capture
                     % any output text or images and move along.
@@ -211,7 +217,7 @@ function success = ml2jade(file_in_name, out_dir, render)
 
                         % Begin a new cell.
                         cell_count = cell_count + 1;
-                        if ~hide_code
+                        if capture
                             hidden_snap('beginCell');
                         end
                         
@@ -225,7 +231,7 @@ function success = ml2jade(file_in_name, out_dir, render)
                             output = evalin('base', 'evalc(ml2jade_storage());');
 
                             % End the cell.
-                            if ~hide_code
+                            if capture
                                 
                                 hidden_snap('endCell');
 
@@ -233,7 +239,7 @@ function success = ml2jade(file_in_name, out_dir, render)
                                 spaces_top = repmat(' ', 1, n_spaces_top);
 
                                 % Use only the non-empty outputs.
-                                if ~isempty(output)
+                                if ~isempty(output) && ~hide_code
 
                                     % We'll use this to indent properly for Jade.
                                     spaces = repmat(' ', 1, n_spaces);
@@ -281,6 +287,7 @@ function success = ml2jade(file_in_name, out_dir, render)
                         in_code    = false;
                         first_line = false;
                         hide_code  = false;
+                        capture    = true;
 
                     end
 
@@ -295,6 +302,10 @@ function success = ml2jade(file_in_name, out_dir, render)
             % See if we need to hide the upcoming block.
             if ~isempty(regexp(line, '//- %#enjaden:hide', 'once'))
                 hide_code = true;
+                capture   = false;
+            elseif ~isempty(regexp(line, '//- %#enjaden:capture', 'once'))
+                hide_code = true;
+                capture   = true;
             end
             
         end % for each line
