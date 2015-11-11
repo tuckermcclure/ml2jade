@@ -95,7 +95,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
     
     % By default (and unless we're just running the example file), use the 
     % input directory as the output directory.
-    if nargin < 2 && nargin ~= 0
+    if (nargin < 2 || isempty(out_dir)) && nargin ~= 0
         out_dir = file_in_dir;
     end
 
@@ -182,13 +182,55 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         page_spaces  = page_spaces{1}{1};
         block_spaces = [page_spaces, '  '];
 
-        % Get started.
-        fprintf(foid, '%s', page_header);
-
+        % Get the spaces for the table of contents (if it's there at all).
+        toc_spaces = regexp(template, ...
+                           '(\ *)<ml2jade=page_toc>[\n\r$]', 'tokens');
+        use_toc = false;
+        if ~isempty(toc_spaces)
+            use_toc = true;
+            toc_spaces = toc_spaces{1}{1};
+        end
+        
         % Look for section breaks.
         [starts, stops, cells] = regexp(text, ...
                                  '(?<=(^|[\n\r]))%%[\t\ ]*(.*?)[\n\r]', ...
                                  'start', 'end', 'tokens');
+        
+        % Build the TOC.
+        if use_toc
+            
+            % Look for non-empty headers.
+            toc = {};
+            for k = 2:length(cells)-1
+                header = replace_inline(cells{k}{1});
+                if    length(header) > 10 ...
+                   && strcmp(header(1:10), '%#enjaden:')
+                    % ...
+                elseif regexp(header, '\S')
+                    toc{end+1} = header; %#ok<AGROW>
+                end
+            end
+
+            % Add the TOC to the header/footer.
+            if ~isempty(toc)
+                for k = 1:length(toc)
+                    toc{k} = sprintf([toc_spaces '  li: a(href="#%d") %s'], k, toc{k});
+                end
+                toc_text = [sprintf('ol\n'), sprintf('%s\n', toc{:})];
+                toc_text(end) = []; % Remove the last newline.
+                page_header = regexprep(page_header, ...
+                                        '<ml2jade=page_toc>', toc_text);
+                page_footer = regexprep(page_footer, ...
+                                        '<ml2jade=page_toc>', toc_text);
+            end
+                
+        end % use_toc
+
+        % Add in the page header.
+        fprintf(foid, '%s', page_header);
+                             
+        % Now do the code bits.
+        toc_count = 0;
         for k = 1:length(cells)-1
 
             fprintf(foid, '\n');
@@ -206,7 +248,12 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
                         fprintf(foid, '%s//- %s\n', page_spaces, header);
                         cell_is_hidden = true;
                     else
-                        fprintf(foid, '%sh2 %s\n', page_spaces, header);
+                        if use_toc
+                            toc_count = toc_count + 1;
+                            fprintf(foid, '%sh2(id="%d") %s\n', page_spaces, toc_count, header);
+                        else
+                            fprintf(foid, '%sh2 %s\n', page_spaces, header);
+                        end
                     end
                 end
             else
@@ -308,14 +355,17 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
             if ~isempty(code) && any(regexp(code{1}{2}, '\S'))
                 code = code{1}{2};
                 code = strtrim(code);
-                code = [block_spaces regexprep(code, ...
-                                           '\n', ['\n' block_spaces])];
                 if ~cell_is_hidden
+                    code = [block_spaces regexprep(code, ...
+                                               '\n', ['\n' block_spaces])];
                     fprintf(foid, '%spre.eval: code.\n', page_spaces);
+                    fprintf(foid, '%s\n', code);
                 else
+                    code = [block_spaces '| ' regexprep(code, ...
+                                          '\n', ['\n' block_spaces '| '])];
                     fprintf(foid, '%s//-\n', page_spaces);
+                    fprintf(foid, '%s\n', code);
                 end
-                fprintf(foid, '%s\n', code);
             end
 
         end
@@ -331,7 +381,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         % Surround the original code with big flags.
         text = sprintf( ...
              '##### SOURCE BEGIN #####\n%s\n##### SOURCE END #####', text);
-         
+        
         % Add in the spaces and print it out.
         text = [block_spaces '| ' regexprep(text, '\n', ['\n' block_spaces '| '])];
         fprintf(foid, '%s\n', text);
@@ -387,7 +437,7 @@ function paragraph = replace_inline(paragraph, type)
     % Embolden.
     if strcmp(type, 'ul');
         paragraph = regexprep(paragraph, ...
-                      '([^\n])\*(.+?)\*(\W|$)', '$1<strong>$2</strong>$3');
+                 '([^\n])\*(.+?[^\n])\*(\W|$)', '$1<strong>$2</strong>$3');
     else
         paragraph = regexprep(paragraph, ...
                            '\*([^\*]+?)\*(\W|$)', '<strong>$1</strong>$2');

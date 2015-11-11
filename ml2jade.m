@@ -114,9 +114,11 @@ function success = ml2jade(file_in_name, out_dir, render)
     % entirely within an evalc. A bit odd. Works fine.
     cell_count = 0;
     function hidden_snap(cmd)
+        drawnow();
         base_cmd = sprintf('evalc(''snapnow(''''%s'''', %d)'');', ...
                            cmd, cell_count);
         evalin('base', base_cmd);
+        drawnow();
     end
 
     % Close the files.
@@ -204,11 +206,16 @@ function success = ml2jade(file_in_name, out_dir, render)
                            && all(line(1:n_spaces) == ' ')
 
                         % Add it to the queue to evaluate later.
-                        if ~isempty(regexp(line, '\s*%#enjaden:', 'once'))
+                        eval_expr = '\s*\|?\ ?%#enjaden:';
+                        if ~isempty(regexp(line, eval_expr, 'once'))
                             ml2jade_storage('add', ...
-                                regexprep(line, '\s*%#enjaden:', ''));
+                                regexprep(line, eval_expr, ''));
                         else
-                            ml2jade_storage('add', line);
+                            if hide_code
+                                ml2jade_storage('add', line(n_spaces+3:end));
+                            else
+                                ml2jade_storage('add', line(n_spaces+1:end));
+                            end
                         end
 
                     % Otherwise, we are done with the code block. Capture
