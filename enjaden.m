@@ -44,7 +44,9 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 % be replaced with the content from the publish .m file.
 %
 % Further, the file can contain <ml2jade=page_title>, which will be
-% replaced with the title (the first %% block).
+% replaced with the title (the first %% block), and a table of contents,
+% containing all of the headers with links, can be placed with
+% <ml2jade=page_toc>. See enjaden_example.m.
 %
 % For example, a simple template is:
 %
@@ -80,14 +82,14 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 % These will appear in the generated Jade as a comment, but the comment
 % *will* be evaluated when "evaluating" the jade with ml2jade.
 %
-% To tell jade to evaluate something is actually a comment in the code:
+% To tell jade to evaluate something that's actually a comment in the code:
 % 
 %   %#enjaden:disp('You''ll only see this when rendering!');
 
     % Set a default file, just as an example.
     if nargin < 1
-        file_in_name = 'enjaden_example.m';
-        out_dir      = 'jade';
+        enjaden('enjaden_example.m', 'jade', [], true, true);
+        return;
     end
     
     % Drop the path from the input file name and the .m.
@@ -122,15 +124,27 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         template = template_name;
     end
     
-    % Create a name for the out file.
-    out_file = [base_name '.jade'];
-    if evaluate
-        out_file = ['_' out_file];
+    % If the out_dir is actually a file, extract the path and file
+    % separately.
+    if ~isempty(regexp(out_dir, '\.jade$', 'once'))
+        
+        % Use the output name.
+        [out_dir, out_file, out_ext] = fileparts(out_dir);
+        out_file = [out_file out_ext];
+        
+    else
+        
+        % Create a name for the out file.
+        out_file = [base_name '.jade'];
+        if evaluate
+            out_file = ['_' out_file];
+        end
+
     end
     
     % Where to put the final .jade file
     jade_out_dir = out_dir;
-    
+
     % If evaluating, put the intermediate file in the working directory.
     if evaluate
         out_dir = pwd;
@@ -174,7 +188,9 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
                                          '<ml2jade=page_content>')+22:end);
 
         % Replace the title.
-        page_header = regexprep(page_header, '<ml2jade=page_title>', title);
+        page_header = regexpreplit(page_header, ...
+                                   '<ml2jade=page_title>', ...
+                                   title);
 
         % Get the nominal spacing.
         page_spaces  = regexp(template, ...
@@ -214,14 +230,16 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
             % Add the TOC to the header/footer.
             if ~isempty(toc)
                 for k = 1:length(toc)
-                    toc{k} = sprintf([toc_spaces '  li: a(href="#%d") %s'], k, toc{k});
+                    toc{k} = sprintf([toc_spaces ...
+                                      '  li: a(href="#%d") %s'], ...
+                                     k, toc{k}); %#ok<AGROW>
                 end
                 toc_text = [sprintf('ol\n'), sprintf('%s\n', toc{:})];
                 toc_text(end) = []; % Remove the last newline.
-                page_header = regexprep(page_header, ...
-                                        '<ml2jade=page_toc>', toc_text);
-                page_footer = regexprep(page_footer, ...
-                                        '<ml2jade=page_toc>', toc_text);
+                page_header = regexpreplit(page_header, ...
+                                           '<ml2jade=page_toc>', toc_text);
+                page_footer = regexpreplit(page_footer, ...
+                                           '<ml2jade=page_toc>', toc_text);
             end
                 
         end % use_toc
@@ -250,9 +268,11 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
                     else
                         if use_toc
                             toc_count = toc_count + 1;
-                            fprintf(foid, '%sh2(id="%d") %s\n', page_spaces, toc_count, header);
+                            fprintf(foid, '%sh2(id="%d") %s\n', ...
+                                    page_spaces, toc_count, header);
                         else
-                            fprintf(foid, '%sh2 %s\n', page_spaces, header);
+                            fprintf(foid, '%sh2 %s\n', ...
+                                    page_spaces, header);
                         end
                     end
                 end
@@ -274,80 +294,9 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 
                 % Drop the '% 's.
                 blurb = regexprep(blurb, '(?<=(\n|^))%\ ?', '');
-
-                % Pick the paragraphs.
-                paragraphs = regexp(blurb, '(.*?)(\n\s*\n|$)', 'tokens');
-
-                % For each paragraph...
-                for p = 1:length(paragraphs)
-
-                    % Trim the newlines off of the paragraph.
-                    paragraph = regexprep(paragraphs{p}{1}, ...
-                                                        '(^\n+|\n*$)', '');
-                    
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%
-                    % Paragraph Replacements %
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%
-                             
-                    do_replacements = true;
-                    
-                    % Code
-                    if length(paragraph) > 2 && all(paragraph(1:2) == ' ')
-                        
-                        fprintf(foid, '%spre: code.\n', page_spaces);
-                        do_replacements = false;
-                        type = 'code';
-                        
-                    % Pre
-                    elseif length(paragraph) > 1 && paragraph(1) == ' '
-                        
-                        fprintf(foid, '%spre.\n', page_spaces);
-                        do_replacements = false;
-                        type = 'pre';
-                        
-                    % Block equations
-                    elseif    length(paragraph) > 2 ...
-                           && all(paragraph(1:2) == '$$')
-                        
-                        do_replacements = false;
-                        
-                    % Bullets
-                    elseif length(paragraph) > 1 && paragraph(1) == '*'
-                        
-                        fprintf(foid, '%sul\n', page_spaces);
-                        type = 'ul';
-                        
-                    % Numbered lists
-                    elseif length(paragraph) > 1 && paragraph(1) == '#'
-                        
-                        fprintf(foid, '%sol\n', page_spaces);
-                        type = 'ol';
-                        
-                    % Otherwise, it's a normal paragraph.
-                    else
-                        
-                        fprintf(foid, '%sp.\n', page_spaces);
-                        type = 'p';
-                        
-                    end
-
-                    %%%%%%%%%%%%%%%%%%%%%%%%
-                    % Inline Replacemenets %
-                    %%%%%%%%%%%%%%%%%%%%%%%%
-                    
-                    % Replace things inside the paragraph (unless it's pre
-                    % or code).
-                    if do_replacements
-                        paragraph = replace_inline(paragraph, type);
-                    end
-                    
-                    % Adding spaceing and stuff like 'ul '.
-                    paragraph = add_prefix(type, paragraph, block_spaces);
-                                           
-                    % Place into the Jade.
-                    fprintf(foid, '%s\n', paragraph);
-
-                end
+                
+                % Now handle each paragraph of the blurb.
+                handle_blurb(foid, page_spaces, block_spaces, blurb);
 
             end
             
@@ -356,9 +305,9 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
                 code = code{1}{2};
                 code = strtrim(code);
                 if ~cell_is_hidden
-                    code = [block_spaces regexprep(code, ...
-                                               '\n', ['\n' block_spaces])];
-                    fprintf(foid, '%spre.eval: code.\n', page_spaces);
+                    code = [block_spaces '| ' regexprep(code, ...
+                                          '\n', ['\n' block_spaces '| '])];
+                    fprintf(foid, '%spre.eval: code\n', page_spaces);
                     fprintf(foid, '%s\n', code);
                 else
                     code = [block_spaces '| ' regexprep(code, ...
@@ -383,7 +332,8 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
              '##### SOURCE BEGIN #####\n%s\n##### SOURCE END #####', text);
         
         % Add in the spaces and print it out.
-        text = [block_spaces '| ' regexprep(text, '\n', ['\n' block_spaces '| '])];
+        text = [block_spaces '| ' ...
+                regexprep(text, '\n', ['\n' block_spaces '| '])];
         fprintf(foid, '%s\n', text);
         
         % Tack on the footer.
@@ -414,6 +364,159 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 
 end % enjaden
 
+%%%%%%%%%%%%%%%%
+% handle_blurb %
+%%%%%%%%%%%%%%%%
+
+function handle_blurb(foid, page_spaces, block_spaces, blurb)
+
+
+    % Pick the paragraphs.
+    paragraphs = regexp(blurb, '(.*?)(\n\s*\n|$)', 'tokens');
+
+    % For each paragraph...
+    for p = 1:length(paragraphs)
+        handle_paragraph(foid, ...
+                         page_spaces, ...
+                         block_spaces, ...
+                         paragraphs{p}{1});
+    end
+                
+end % handle_blurb
+
+%%%%%%%%%%%%%%%%%%%%
+% handle_paragraph %
+%%%%%%%%%%%%%%%%%%%%
+
+function handle_paragraph(foid, page_spaces, block_spaces, paragraph)
+
+    % Trim the newlines off of the paragraph.
+    paragraph = regexprep(paragraph, '(^\n+|\n*$)', '');
+
+    % True if we should replace things like *this* in the text.
+    do_replacements = true;
+
+    % Code
+    if length(paragraph) > 2 && all(paragraph(1:2) == ' ')
+
+        fprintf(foid, '%spre: code\n', page_spaces);
+        do_replacements = false;
+        type = 'code';
+
+    % Pre
+    elseif length(paragraph) > 1 && paragraph(1) == ' '
+
+        fprintf(foid, '%spre\n', page_spaces);
+        do_replacements = false;
+        type = 'pre';
+
+    % Block equations
+    elseif    length(paragraph) > 2 ...
+           && all(paragraph(1:2) == '$$')
+
+        do_replacements = false;
+        type = '';
+
+    % Bullets
+    elseif length(paragraph) > 1 && paragraph(1) == '*'
+
+        fprintf(foid, '%sul\n', page_spaces);
+        type = 'ul';
+
+    % Numbered lists
+    elseif length(paragraph) > 1 && paragraph(1) == '#'
+
+        fprintf(foid, '%sol\n', page_spaces);
+        type = 'ol';
+
+    % Table
+    elseif    length(paragraph) > 2 ...
+           && all(paragraph(1:2) == '+-')
+
+        % type = 'table';
+
+        % Parse the first line and start the table.
+        first_line = paragraph(1:find(paragraph == sprintf('\n'), ...
+                                      1, 'first') - 1);
+        if any(first_line == '(')
+            attr_start = find(first_line == '(', 1);
+            attr_stop  = find(first_line == ')', 1, 'last');
+            attributes = first_line(attr_start:attr_stop);
+            fprintf(foid, '%stable%s\n', page_spaces, attributes);
+        else
+            fprintf(foid, '%stable\n', page_spaces);
+        end
+
+        % Use the line breaks to turn the text into cells.
+        matches = regexp(paragraph, '[^\n]*?(?=(\n|$))', 'match');
+        padded = char(matches{:});
+        rows = find(padded(:, 1) == '+');
+        cols = find(padded(1, :) == '+');
+        cols(end) = size(padded, 2)+2;
+        
+        % Process each cell of the table.
+        for r = 1:length(rows)-1
+            
+            fprintf(foid, '%str\n', [page_spaces '  ']);
+            for c = 1:length(cols)-1
+                
+                % If it's a header, output a th; otherwise, td.
+                if    any(padded(rows(r):rows(r+1)-1, 1) == 'h') ...
+                   || any(padded(1, cols(c):cols(c+1)-2) == 'h')
+                    fprintf(foid, '%sth\n', [page_spaces '    ']);
+                else
+                    fprintf(foid, '%std\n', [page_spaces '    ']);
+                end
+                
+                % Go from the padded string back to a single string.
+                cell = padded(rows(r)+1:rows(r+1)-1, ...
+                              cols(c)+2:cols(c+1)-2);
+                cell = [cell, repmat(sprintf('\n'), size(cell, 1), 1)]; %#ok<AGROW>
+                cell = cell.';
+                cell = cell(:).';
+                
+                % Remove all the extra spaces at the beginning and end.
+                cell = regexprep(cell, '^\s+\n', '');
+                cell = regexprep(cell, '\s+$', '');
+                
+                % Now handle this cell as its own paragraph.
+                handle_blurb(foid, ...
+                             [page_spaces '      '], ...
+                             [block_spaces '      '], ...
+                             cell);
+                
+            end % columns
+            
+        end % rows
+        
+        % There's nothing left for this paragraph.
+        return;
+
+    % Otherwise, it's a normal paragraph.
+    else
+
+        fprintf(foid, '%sp\n', page_spaces);
+        type = 'p';
+
+    end
+
+    % Replace things inside the paragraph (unless it's pre or code).
+    if do_replacements
+        paragraph = replace_inline(paragraph, type);
+    end
+
+    % Adding spacing and stuff like 'ul '.
+    paragraph = add_prefix(type, paragraph, block_spaces);
+
+    % Place into the Jade.
+    fprintf(foid, '%s\n', paragraph);
+
+end % handle_paragraph
+
+%%%%%%%%%%%%%%%%%%
+% replace_inline %
+%%%%%%%%%%%%%%%%%%
+
 % Replace inline expressions.
 function paragraph = replace_inline(paragraph, type)
 
@@ -431,8 +534,8 @@ function paragraph = replace_inline(paragraph, type)
 
     % Links.
     paragraph = regexprep(paragraph, ...
-                                 '(^|[^<])<([^<\ ]+?)\ (.*?)>([^>]|$)', ...
-                                 '$1<a href="$2">$3</a>$4');
+                        '(?<=(^|[^<]))<([^<\ ]+?)\ (.*?)>(?=([^>]|$))', ...
+                        '<a href="$1">$2</a>');
 
     % Embolden.
     if strcmp(type, 'ul');
@@ -440,7 +543,7 @@ function paragraph = replace_inline(paragraph, type)
                  '([^\n])\*(.+?[^\n])\*(\W|$)', '$1<strong>$2</strong>$3');
     else
         paragraph = regexprep(paragraph, ...
-                           '\*([^\*]+?)\*(\W|$)', '<strong>$1</strong>$2');
+                         '\*(\S[^\*]+?)\*(\W|$)', '<strong>$1</strong>$2');
     end
 
     % Italic.
@@ -454,8 +557,15 @@ function paragraph = replace_inline(paragraph, type)
 
 end % replace_inline
 
-% Add spacing and stuff like 'ul  '.
+%%%%%%%%%%%%%%
+% add_prefix %
+%%%%%%%%%%%%%%
+
+% Add spacing and stuff like 'li'.
 function paragraph = add_prefix(type, paragraph, block_spaces)
+
+    % True if we should add the bar when adding spaces.
+    add_bar = true;
 
     % Add the spaces for the block.
     switch type
@@ -473,18 +583,35 @@ function paragraph = add_prefix(type, paragraph, block_spaces)
         case 'ol'
             
             % Add li.
-            paragraph = regexprep(paragraph, '(^|\n)\#\ ', '$1li.\n\ \ ');
+            paragraph = regexprep(paragraph, '(^|\n)\#\ ', '$1li\n\ \ ');
+            paragraph = regexprep(paragraph, '\n\ \ ', '\n\ \ |\ ');
+            add_bar = false;
                      
         case 'ul'
             
             % Add li.
-            paragraph = regexprep(paragraph, '(^|\n)\*\ ', '$1li.\n\ \ ');
-                     
+            paragraph = regexprep(paragraph, '(^|\n)\*\ ', '$1li\n\ \ ');
+            paragraph = regexprep(paragraph, '\n\ \ ', '\n\ \ |\ ');
+            add_bar = false;
 
     end
             
     % Prefix the spaces.
-    paragraph = [block_spaces ...
-                 regexprep(paragraph, '\n', ['\n' block_spaces])];
+    if add_bar
+        paragraph = [block_spaces '| ' ...
+                     regexprep(paragraph, '\n', ['\n' block_spaces '| '])];
+    else
+        paragraph = [block_spaces ...
+                     regexprep(paragraph, '\n', ['\n' block_spaces])];
+    end
                     
 end % add_prefix
+
+%%%%%%%%%%%%%%%%
+% regexpreplit %
+%%%%%%%%%%%%%%%%
+
+% Replace matches with a literal string.
+function s = regexpreplit(s, p, r)
+    s = regexprep(s, p, regexptranslate('escape', r));
+end % regexpreplit

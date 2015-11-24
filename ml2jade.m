@@ -1,4 +1,4 @@
-function success = ml2jade(file_in_name, out_dir, render)
+function success = ml2jade(file_in_name, out_dir, render, verbose)
 
 % ml2jade
 %
@@ -56,6 +56,11 @@ function success = ml2jade(file_in_name, out_dir, render)
     % By default, don't render to HTML.
     if nargin < 3
         render = false;
+    end
+    
+    % By default, keep quiet.
+    if nargin < 4
+        verbose = false;
     end
     
     % We're pessimists.
@@ -165,7 +170,7 @@ function success = ml2jade(file_in_name, out_dir, render)
             if ~in_code
 
                 % Look for the line that signals incoming code.
-                n_spaces_top = regexp(line, '^\s*(?=pre.eval: code\.)', 'end');
+                n_spaces_top = regexp(line, '^\s*(?=pre.eval: code)', 'end');
 
                 % If code was found...
                 if ~isempty(n_spaces_top)
@@ -214,7 +219,7 @@ function success = ml2jade(file_in_name, out_dir, render)
                             if hide_code
                                 ml2jade_storage('add', line(n_spaces+3:end));
                             else
-                                ml2jade_storage('add', line(n_spaces+1:end));
+                                ml2jade_storage('add', line(n_spaces+3:end));
                             end
                         end
 
@@ -234,7 +239,9 @@ function success = ml2jade(file_in_name, out_dir, render)
                         % evaluate everything.
                         try
                             
-                            fprintf('Evaluating:\n\n%s\n\n', ml2jade_storage());
+                            if verbose
+                                fprintf('Evaluating:\n\n%s\n\n', ml2jade_storage());
+                            end
                             output = evalin('base', 'evalc(ml2jade_storage());');
 
                             % End the cell.
@@ -252,14 +259,14 @@ function success = ml2jade(file_in_name, out_dir, render)
                                     spaces = repmat(' ', 1, n_spaces);
 
                                     % Print this as an "output" pre.
-                                    fprintf(foid, '%spre.output: code.\n', ...
+                                    fprintf(foid, '%spre.output: code\n', ...
                                             spaces_top);
 
                                     % Replace all \n (except for the last) with \n
                                     % followed by the appropriate number of spaces.
                                     out_lines = regexprep(output, '\n(?!$)', ...
-                                                          ['\n' spaces]);
-                                    fprintf(foid, '%s%s', spaces, out_lines);
+                                                       ['\n' spaces '| ']);
+                                    fprintf(foid, '%s%s', [spaces '| '], out_lines);
 
                                 end
 
