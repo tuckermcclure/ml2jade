@@ -532,10 +532,13 @@ function paragraph = replace_inline(paragraph, type)
                           '(?<=(^|[^\$]))\$([^\$]+?)\$(?=([^\$]|$))', ...
                           '\\\($1\\\)');
 
-    % Links.
+    % Links (first as <link> and then <link text>).
     paragraph = regexprep(paragraph, ...
-                        '(?<=(^|[^<]))<([^<\ ]+?)\ (.*?)>(?=([^>]|$))', ...
-                        '<a href="$1">$2</a>');
+                         '(?<=(^|[^<]))<(\S+)>(?=([^>]|$))', ...
+                         '<$1 $1>');
+    paragraph = regexprep(paragraph, ...
+                         '(?<=(^|[^<]))<(\S+)\ ?(.*?)>(?=([^>]|$))', ...
+                         '<a href="$1">$2</a>');
 
     % Embolden.
     if strcmp(type, 'ul');
@@ -550,7 +553,9 @@ function paragraph = replace_inline(paragraph, type)
     paragraph = regexprep(paragraph, '_(\w.+?)_(\W|$)', '<em>$1</em>$2');
 
     % Code.
-    paragraph = regexprep(paragraph, '\|(.+?)\|', '<code>$1</code>');
+    paragraph = regexprep(paragraph, ...
+                          '(?<=(^|[^\\]))\|(.+?)\|', ...
+                          '<code>$1</code>');
 
     % Image.
     paragraph = regexprep(paragraph, '<<(.*?)>>', '<img src="$1">');
@@ -574,6 +579,8 @@ function paragraph = add_prefix(type, paragraph, block_spaces)
             
             % Remove unnecessary spaces.
             paragraph = regexprep(paragraph, '(^|\n)\ \ ', '$1');
+            paragraph = regexprep(paragraph, '<', '&lt;');
+            paragraph = regexprep(paragraph, '>', '&gt;');
                      
         case 'pre'
             
