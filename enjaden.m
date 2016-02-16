@@ -175,6 +175,15 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         text = [regexprep(original_text, '\r', '') ...
                 sprintf('\n\n%%%%\n')];
 
+        % See if it's a function. All we do for functions is put the title
+        % up top. The rest will be treated as a block of code.
+%         run_function = false;
+        if regexp(text, '^\s*function')
+            [~, title] = fileparts(file_in_name);
+            text = sprintf('%%%% %s\n\n%s', title, text);
+%             run_function = true;
+        end
+            
         % Look for the title.
         title = regexp(text, '^[\n\r]*%%\ *(.*?)[\n\r]', 'tokens');
         if ~isempty(title)
@@ -348,6 +357,8 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
         if evaluate
             success = ml2jade(out_file, jade_out_dir, render);
             for tries = 1:50
+                clear(out_file);
+                pause(0.001);
                 if exist(out_file, 'file')
                     delete(out_file);
                     break;
@@ -522,6 +533,10 @@ function paragraph = replace_inline(paragraph, type)
 
     if nargin < 2, type = ''; end;
 
+    % Replace %#ok<whatever, else>.
+    paragraph = regexprep(paragraph, ...
+                          '(%#ok)<(.*?)>', '$1&lt;$2&gt;');
+    
     % Replace inline equations. Note that display equations need
     % not be replaced! This is one of the ugliest regexps I've ever
     % written. We want (beginning of string or something that's not

@@ -13,7 +13,7 @@ function snapit(varargin)
         % Use this instead of snapnow to prevent weirdness.
         evalin('base', 'evalc(''snapnow'');');
         
-    elseif nargin == 2
+    elseif nargin >= 2
 
         % Get the coordinates from the indicated figure.
         h     = varargin{1};
@@ -24,8 +24,10 @@ function snapit(varargin)
         h_temp = figure();
         imshow(frame.cdata);
         snapit();
-        close(h_temp);
-
+        if nargin < 3 || ~varargin{3}
+            close(h_temp);
+        end
+        
     end
 
 end % snapit

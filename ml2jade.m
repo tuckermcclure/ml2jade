@@ -242,7 +242,21 @@ function success = ml2jade(file_in_name, out_dir, render, verbose)
                             if verbose
                                 fprintf('Evaluating:\n\n%s\n\n', ml2jade_storage());
                             end
-                            output = evalin('base', 'evalc(ml2jade_storage());');
+                            
+                            % See if it's a function. If so, run it as a
+                            % function. This won't work if there are
+                            % comments before the function definition. The
+                            % word 'function' must be the first thing to
+                            % appear in the file.
+                            tokens = regexp(ml2jade_storage(), '^\s*function.*?(\w+)\(', 'tokens');
+                            if ~isempty(tokens)
+                                output = evalin('base', ['evalc(''' tokens{1}{1} '()'');']);
+                                
+                            % Otherwise, run the text stored in
+                            % ml2jade_storage.
+                            else
+                                output = evalin('base', 'evalc(ml2jade_storage());');
+                            end
 
                             % End the cell.
                             if capture
