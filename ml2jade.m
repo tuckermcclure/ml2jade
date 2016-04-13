@@ -216,11 +216,7 @@ function success = ml2jade(file_in_name, out_dir, render, verbose)
                             ml2jade_storage('add', ...
                                 regexprep(line, eval_expr, ''));
                         else
-                            if hide_code
-                                ml2jade_storage('add', line(n_spaces+3:end));
-                            else
-                                ml2jade_storage('add', line(n_spaces+3:end));
-                            end
+                            ml2jade_storage('add', line(n_spaces+3:end));
                         end
 
                     % Otherwise, we are done with the code block. Capture

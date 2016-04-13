@@ -177,11 +177,9 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 
         % See if it's a function. All we do for functions is put the title
         % up top. The rest will be treated as a block of code.
-%         run_function = false;
         if regexp(text, '^\s*function')
             [~, title] = fileparts(file_in_name);
             text = sprintf('%%%% %s\n\n%s', title, text);
-%             run_function = true;
         end
             
         % Look for the title.
