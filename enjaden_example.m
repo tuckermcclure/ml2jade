@@ -36,6 +36,25 @@
 % # Thing 2
 % # Thing 3
 %
+% Tables can be drawn out like so:
+%
+% +-h-----------+---------------+(class="my_table_class")
+% | Rows? Cols? | Make rows and columns with "+", "-", and "|".
+% +-------------+---
+% | Headers?    | Indicate which row or column should contain headers
+% |               by putting an "h" above the column or beside the row
+% |               in place of the "+" or "-". These will be |th| instead of
+% |               |td|.
+% +----
+% | Strictness?   Only the top row and left column must be defined rigidly
+% |               with "+", "-", "h", and "|". After that, the spacing must
+% |               rigid, but there's no need to keep drawing lines.
+% +--
+% | Class?        To give the table a custom class, just include
+% |               |(class="my_class_name")| at the end of the column
+% |               definition row. This is optional.
+% +-
+%
 % Finally, we can ignore an entire section by using:
 %
 %   %% %#enjaden:hide

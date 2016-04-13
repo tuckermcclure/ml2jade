@@ -6,7 +6,7 @@ html
     title <ml2jade=page_title>
 
     //- Create a simple default style sheet that doesn't look terrible.
-    style
+    style.
       :stylus
         h1, h2, h3, h4, h5, h6, body, p, a
           font-family sans-serif
@@ -19,7 +19,7 @@ html
           padding 20px
         figure img
           max-width 640px
-        //- Unccoment the below to turn on section numbering.
+        //- Uncomment the below to turn on section numbering.
         //-h1, body
         //-  counter-reset section
         //-h2:before
@@ -43,5 +43,9 @@ html
 
       h1 <ml2jade=page_title>
 
+      h4 Table of Contents
+      <ml2jade=page_toc>
+      
       //- Bring in the contents from the .m file.
       <ml2jade=page_content>
+

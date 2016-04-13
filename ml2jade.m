@@ -1,4 +1,4 @@
-function success = ml2jade(file_in_name, out_dir, render)
+function success = ml2jade(file_in_name, out_dir, render, verbose)
 
 % ml2jade
 %
@@ -58,6 +58,11 @@ function success = ml2jade(file_in_name, out_dir, render)
         render = false;
     end
     
+    % By default, keep quiet.
+    if nargin < 4
+        verbose = false;
+    end
+    
     % We're pessimists.
     success = false; %#ok<NASGU>
 
@@ -114,9 +119,11 @@ function success = ml2jade(file_in_name, out_dir, render)
     % entirely within an evalc. A bit odd. Works fine.
     cell_count = 0;
     function hidden_snap(cmd)
+        drawnow();
         base_cmd = sprintf('evalc(''snapnow(''''%s'''', %d)'');', ...
                            cmd, cell_count);
         evalin('base', base_cmd);
+        drawnow();
     end
 
     % Close the files.
@@ -163,7 +170,7 @@ function success = ml2jade(file_in_name, out_dir, render)
             if ~in_code
 
                 % Look for the line that signals incoming code.
-                n_spaces_top = regexp(line, '^\s*(?=pre.eval: code\.)', 'end');
+                n_spaces_top = regexp(line, '^\s*(?=pre.eval: code)', 'end');
 
                 % If code was found...
                 if ~isempty(n_spaces_top)
@@ -204,11 +211,12 @@ function success = ml2jade(file_in_name, out_dir, render)
                            && all(line(1:n_spaces) == ' ')
 
                         % Add it to the queue to evaluate later.
-                        if ~isempty(regexp(line, '\s*%#enjaden:', 'once'))
+                        eval_expr = '\s*\|?\ ?%#enjaden:';
+                        if ~isempty(regexp(line, eval_expr, 'once'))
                             ml2jade_storage('add', ...
-                                regexprep(line, '\s*%#enjaden:', ''));
+                                regexprep(line, eval_expr, ''));
                         else
-                            ml2jade_storage('add', line);
+                            ml2jade_storage('add', line(n_spaces+3:end));
                         end
 
                     % Otherwise, we are done with the code block. Capture
@@ -227,8 +235,24 @@ function success = ml2jade(file_in_name, out_dir, render)
                         % evaluate everything.
                         try
                             
-                            fprintf('Evaluating:\n\n%s\n\n', ml2jade_storage());
-                            output = evalin('base', 'evalc(ml2jade_storage());');
+                            if verbose
+                                fprintf('Evaluating:\n\n%s\n\n', ml2jade_storage());
+                            end
+                            
+                            % See if it's a function. If so, run it as a
+                            % function. This won't work if there are
+                            % comments before the function definition. The
+                            % word 'function' must be the first thing to
+                            % appear in the file.
+                            tokens = regexp(ml2jade_storage(), '^\s*function.*?(\w+)\(', 'tokens');
+                            if ~isempty(tokens)
+                                output = evalin('base', ['evalc(''' tokens{1}{1} '()'');']);
+                                
+                            % Otherwise, run the text stored in
+                            % ml2jade_storage.
+                            else
+                                output = evalin('base', 'evalc(ml2jade_storage());');
+                            end
 
                             % End the cell.
                             if capture
@@ -245,14 +269,14 @@ function success = ml2jade(file_in_name, out_dir, render)
                                     spaces = repmat(' ', 1, n_spaces);
 
                                     % Print this as an "output" pre.
-                                    fprintf(foid, '%spre.output: code.\n', ...
+                                    fprintf(foid, '%spre.output: code\n', ...
                                             spaces_top);
 
                                     % Replace all \n (except for the last) with \n
                                     % followed by the appropriate number of spaces.
                                     out_lines = regexprep(output, '\n(?!$)', ...
-                                                          ['\n' spaces]);
-                                    fprintf(foid, '%s%s', spaces, out_lines);
+                                                       ['\n' spaces '| ']);
+                                    fprintf(foid, '%s%s', [spaces '| '], out_lines);
 
                                 end
 
