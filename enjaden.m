@@ -69,7 +69,7 @@ function success = enjaden(file_in_name, out_dir, template_name, evaluate, rende
 % -----
 % 
 % To evaluate code without including the code or results in the generated
-% Jade file, use a section whose header is #%enjaden:hide, such as:
+% Jade file, use a section whose header is %#enjaden:hide, such as:
 %
 %   %% %#enjaden:hide
 %   set(h, 'Color', 'w'); % Make figure background white, but don't show it
