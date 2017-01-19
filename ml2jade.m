@@ -264,7 +264,12 @@ function success = ml2jade(file_in_name, out_dir, render, verbose)
 
                                 % Use only the non-empty outputs.
                                 if ~isempty(output) && ~hide_code
-
+                                    
+                                    % Logical variables are displayed with
+                                    % HTML. Remove it.
+                                    logical_expr = regexptranslate('escape', '<a href="matlab:helpPopup logical" style="font-weight:bold">logical</a>');
+                                    output = regexprep(output, logical_expr, 'logical');
+                                    
                                     % We'll use this to indent properly for Jade.
                                     spaces = repmat(' ', 1, n_spaces);
 
